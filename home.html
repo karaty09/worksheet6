@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.2.2/mqtt.min.js"
+        integrity="sha512-I8gBERqrEkyDqbjHj3aymzBVIPFs85vGSzy26+1P5weHzFp8vfJ8dARJz51n3oQ80DTdYn8MbhUiz5UAW2rMxw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>LED Control</title>
+</head>
+
+<body>
+    <h1>LED</h1>
+    <button type="button" id="ledOnButton" onclick="turnOnLED()">Turn On LED</button>
+    <button type="button" id="ledOffButton" onclick="turnOffLED()">Turn Off LED</button>
+
+    <script>
+        const client = mqtt.connect("mqtt://192.168.0.119:9000");
+        let isLedOn = false;
+
+        // When the connection is successful
+        client.on("connect", () => {
+            // Subscribe to the "led" topic
+            client.subscribe("led", (err) => {
+                if (!err) {
+                    // Send "ON" or "OFF" to the "led" topic
+                    client.publish("led", isLedOn ? "on" : "off");
+                }
+            });
+        });
+
+        // When receiving data from the MQTT Broker
+        client.on("message", (topic, message) => {
+            console.log(message.toString());
+        });
+
+        // Function to turn on the LED
+        function turnOnLED() {
+            isLedOn = true;
+            client.publish("led", "on");
+            updateButtonText();
+        }
+
+        // Function to turn off the LED
+        function turnOffLED() {
+            isLedOn = false;
+            client.publish("led", "off");
+            updateButtonText();
+        }
+
+        // Function to update the button text
+        function updateButtonText() {
+            var onButton = document.getElementById('ledOnButton');
+            var offButton = document.getElementById('ledOffButton');
+            onButton.disabled = isLedOn;
+            offButton.disabled = !isLedOn;
+        }
+
+    </script>
+</body>
+
+</html>
